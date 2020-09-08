@@ -1,5 +1,13 @@
 package rez.mtg.price.helper;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,22 +16,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.rmi.server.ExportException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 @Component
 public
@@ -31,10 +26,11 @@ class ScryfallHelper {
 
     @Autowired
     private JSONHelper jsonHelper;
-    @Value( "${mtg.datapath}" )
+    @Value("${mtg.datapath}")
     private String downloadLocation;
 
-    public JSONArray downloadDailyBulkData() throws ParseException, IOException {
+    public
+    String downloadDailyBulkData() throws ParseException, IOException {
         String url = "https://api.scryfall.com/bulk-data";
         String defaultCardsLocation = null;
 
@@ -61,6 +57,7 @@ class ScryfallHelper {
             }
         }
 
+
         String file = downloadLocation + updateTime + ".json";
 
         URL website = new URL(defaultCardsLocation);
@@ -71,29 +68,37 @@ class ScryfallHelper {
                        Paths.get(file),
                        StandardCopyOption.REPLACE_EXISTING);
 //            logger.info("Data finished downloading.");
+        } catch (ExportException e) {
+            return null;
         }
-
-        JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(file)) {
-            //Read JSON file
-            obj = jsonParser.parse(reader);
-
-            return (JSONArray) obj;
-
-        } catch (FileNotFoundException e) {
-//            logger.error("FileNotFoundException {}",
-//                         e);
-            e.printStackTrace();
-        } catch (IOException e) {
-//            logger.error("IOException {}",
-//                         e);
-            e.printStackTrace();
-        } catch (ParseException e) {
-//            logger.error("ParseException {}",
-//                         e);
-            e.printStackTrace();
-        }
-
-        return null;
+        return file;
     }
+
+//    public
+//    JSONArray openDownloadedJson(String file) throws ParseException, IOException {
+//        JSONParser parser = new JSONParser();
+//        Object obj = parser.parse(result);
+//        JSONParser jsonParser = new JSONParser();
+//        try (FileReader reader = new FileReader(file)) {
+//            //Read JSON file
+//            obj = jsonParser.parse(reader);
+//
+//            return (JSONArray) obj;
+//
+//        } catch (FileNotFoundException e) {
+////            logger.error("FileNotFoundException {}",
+////                         e);
+//            e.printStackTrace();
+//        } catch (IOException e) {
+////            logger.error("IOException {}",
+////                         e);
+//            e.printStackTrace();
+//        } catch (ParseException e) {
+////            logger.error("ParseException {}",
+////                         e);
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
 }

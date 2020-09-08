@@ -22,20 +22,25 @@ class CardController {
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
-        return "Done!!!";
+        return "Done!";
     }
 
     @GetMapping(path = "/download")
     public @ResponseBody
     String downloadScryFall() {
         JSONArray data = null;
+        String fileLocation = null;
         try {
-            data = scryfallHelper.downloadDailyBulkData();
+            fileLocation = scryfallHelper.downloadDailyBulkData();
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return data.size() + " items in the JSON";
+        if(fileLocation!=null)
+        {
+
+        }
+        return fileLocation;
     }
 }
