@@ -22,7 +22,7 @@ class CardController {
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
-        return "Done!";
+        return "Test end point success.";
     }
 
     @GetMapping(path = "/download")
