@@ -32,7 +32,7 @@ class CardController {
         logger.debug("debug");
         logger.warn("warn");
         logger.error("error");
-        return "Test end point success.";
+        return "Test end point success with logs.";
     }
 
     @GetMapping(path = "/download")
