@@ -36,7 +36,6 @@ class CardController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String string = data.toJSONString();
         return data.size() + " items in the JSON";
     }
 }
