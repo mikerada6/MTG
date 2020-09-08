@@ -2,6 +2,8 @@ package rez.mtg.price.controller;
 
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +18,20 @@ import java.io.IOException;
 public
 class CardController {
 
+    private static final Logger logger = LoggerFactory.getLogger(CardController.class);
+
     @Autowired
     ScryfallHelper scryfallHelper;
 
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
+        logger.info("default endpoint");
+        logger.trace("trace");
+        logger.info("info");
+        logger.debug("debug");
+        logger.warn("warn");
+        logger.error("error");
         return "Test end point success.";
     }
 
@@ -44,3 +54,4 @@ class CardController {
         return fileLocation;
     }
 }
+
