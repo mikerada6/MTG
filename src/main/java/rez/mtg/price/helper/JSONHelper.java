@@ -11,11 +11,16 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import rez.mtg.price.controller.CardController;
 
 @Component
 public
 class JSONHelper {
+
+    private static final Logger logger = LoggerFactory.getLogger(JSONHelper.class);
     private final CloseableHttpClient httpClient;
 
     public JSONHelper() {
@@ -40,13 +45,13 @@ class JSONHelper {
             }
 
         } catch (ClientProtocolException e) {
-//            logger.error("ClientProtocolException {}", e);
+            logger.error("ClientProtocolException {}", e);
             e.printStackTrace();
         } catch (IOException e) {
-//            logger.error("IOException {}", e);
+            logger.error("IOException {}", e);
             e.printStackTrace();
         }
-//        logger.trace("Got result {}: ", result);
+        logger.trace("Got result {}: ", result);
         return result;
     }
 

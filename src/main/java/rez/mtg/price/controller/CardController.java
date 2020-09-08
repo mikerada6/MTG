@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import rez.mtg.price.helper.ScryfallHelper;
+import rez.mtg.price.repository.CardRepository;
 
 import java.io.IOException;
 
@@ -23,16 +24,21 @@ class CardController {
     @Autowired
     ScryfallHelper scryfallHelper;
 
+    @Autowired
+    private CardRepository cardRepository;
+
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
-        logger.info("default endpoint");
-        logger.trace("trace");
-        logger.info("info");
-        logger.debug("debug");
-        logger.warn("warn");
-        logger.error("error");
+        logger.trace("testEndPoint");
         return "Test end point success with logs.";
+    }
+
+    @GetMapping(path = "/count")
+    public @ResponseBody
+    long cardCount() {
+        logger.trace("cardCount");
+        return cardRepository.count();
     }
 
     @GetMapping(path = "/download")
@@ -44,8 +50,10 @@ class CardController {
             fileLocation = scryfallHelper.downloadDailyBulkData();
         } catch (ParseException e) {
             e.printStackTrace();
+            logger.error("ParseException {}", e);
         } catch (IOException e) {
             e.printStackTrace();
+            logger.error("IOException {}", e);
         }
         if(fileLocation!=null)
         {
