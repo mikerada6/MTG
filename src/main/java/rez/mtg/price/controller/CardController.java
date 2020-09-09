@@ -34,21 +34,21 @@ class CardController {
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
-        logger.trace("testEndPoint");
+        logger.info("testEndPoint");
         return "Test end point success with logs.";
     }
 
     @GetMapping(path = "/count")
     public @ResponseBody
     long cardCount() {
-        logger.trace("cardCount");
+        logger.info("cardCount");
         return cardRepository.count();
     }
 
     @GetMapping(path = "/dummy")
     public @ResponseBody
     long dummy() {
-        logger.trace("dummy");
+        logger.info("dummy");
         try {
             JSONArray json = scryfallHelper.openDownloadedJson(downloadLocation+"/20200908_0903.json");
             return json.size();
@@ -65,6 +65,7 @@ class CardController {
     @GetMapping(path = "/download")
     public @ResponseBody
     String downloadScryFall() {
+        logger.info("download");
         JSONArray data = null;
         String fileLocation = null;
         try {

@@ -41,7 +41,8 @@ class PriceController {
 
     @PostMapping(path = "/today")
     public @ResponseBody
-    String updateBulk() {
+    String updatePriceForToday() {
+        logger.info("updatePriceForToday");
         JSONArray arrayData = null;
         ArrayList<Price> priceArrayList = new ArrayList<Price>();
         try {
@@ -52,8 +53,11 @@ class PriceController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        long count =0L;
+        long total = arrayData.size();
         if (arrayData != null) {
             for (int i = 0; i < arrayData.size(); i++) {
+                count++;
                 JSONObject datum = ((JSONObject) arrayData.get(i));
                 JSONObject prices = ((JSONObject) datum.get("prices"));
                 String cardId = datum.containsKey("id") ? datum.get("id").toString() : null;
@@ -98,7 +102,8 @@ class PriceController {
                         //only save a price if its not all null
                         priceArrayList.add(price);
                         if (priceArrayList.size() == 500) {
-                            logger.info("Saving some price data");
+                            logger.info("Saving 500 price data");
+                            logger.info("We have now saved {} out of {}", count, total);
                             priceRepository.saveAll(priceArrayList);
                             priceArrayList.clear();
                         }
