@@ -1,5 +1,7 @@
 package rez.mtg.price.helper;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -67,7 +70,7 @@ class ScryfallHelper {
             Files.copy(in,
                        Paths.get(file),
                        StandardCopyOption.REPLACE_EXISTING);
-            logger.info("Data finished downloading.");
+            logger.info("Data downloaded to {}.", file);
         } catch (ExportException e) {
             return null;
         }
@@ -75,15 +78,18 @@ class ScryfallHelper {
     }
 
     public
-    JSONArray openDownloadedJson(String filePath) throws ParseException, IOException {
+    JsonParser openDownloadedJson(String filePath) throws ParseException, IOException {
         Object obj = null;
-        JSONParser jsonParser = new JSONParser();
+        JsonFactory jsonfactory = new JsonFactory();
         try (FileReader reader = new FileReader(filePath)) {
             //Read JSON file
-            logger.info("Going to open file {}", filePath);
-            obj = jsonParser.parse(reader);
-            logger.info("File is open");
-            return (JSONArray) obj;
+            logger.info("Going to open file {}",
+                        filePath);
+
+            File jsonFile = new File(filePath);
+            JsonParser jsonParser = jsonfactory.createParser(jsonFile);
+            logger.info("File is loaded into the factory");
+            return jsonParser;
 
         } catch (FileNotFoundException e) {
             logger.error("FileNotFoundException {}",
@@ -93,12 +99,9 @@ class ScryfallHelper {
             logger.error("IOException {}",
                          e);
             e.printStackTrace();
-        } catch (ParseException e) {
-            logger.error("ParseException {}",
-                         e);
-            e.printStackTrace();
         }
-        logger.error("We were not able to open the file {}.", filePath);
+        logger.error("We were not able to open the file {}.",
+                     filePath);
         return null;
     }
 }

@@ -45,23 +45,6 @@ class CardController {
         return cardRepository.count();
     }
 
-    @GetMapping(path = "/dummy")
-    public @ResponseBody
-    long dummy() {
-        logger.info("dummy");
-        try {
-            JSONArray json = scryfallHelper.openDownloadedJson(downloadLocation+"/20200908_0903.json");
-            return json.size();
-        } catch (ParseException e) {
-            e.printStackTrace();
-            logger.error("ParseException {}", e);
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.error("IOException {}", e);
-        }
-        return -1;
-    }
-
     @GetMapping(path = "/download")
     public @ResponseBody
     String downloadScryFall() {
