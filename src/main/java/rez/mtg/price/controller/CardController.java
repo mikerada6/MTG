@@ -5,6 +5,7 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,9 @@ class CardController {
     @Autowired
     private CardRepository cardRepository;
 
+    @Value("${mtg.datapath}")
+    private String downloadLocation;
+
     @GetMapping(path = "/")
     public @ResponseBody
     String testEndPoint() {
@@ -39,6 +43,23 @@ class CardController {
     long cardCount() {
         logger.trace("cardCount");
         return cardRepository.count();
+    }
+
+    @GetMapping(path = "/dummy")
+    public @ResponseBody
+    long dummy() {
+        logger.trace("dummy");
+        try {
+            JSONArray json = scryfallHelper.openDownloadedJson(downloadLocation+"/20200908_0903.json");
+            return json.size();
+        } catch (ParseException e) {
+            e.printStackTrace();
+            logger.error("ParseException {}", e);
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.error("IOException {}", e);
+        }
+        return -1;
     }
 
     @GetMapping(path = "/download")

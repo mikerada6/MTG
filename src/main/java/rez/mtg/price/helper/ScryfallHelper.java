@@ -4,6 +4,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 public
 class ScryfallHelper {
 
+    private static final Logger logger = LoggerFactory.getLogger(ScryfallHelper.class);
     @Autowired
     private JSONHelper jsonHelper;
     @Value("${mtg.datapath}")
@@ -43,16 +46,13 @@ class ScryfallHelper {
             JSONArray data = (JSONArray) object.get("data");
             for (int i = 0; i < data.size(); i++) {
                 JSONObject datum = (JSONObject) data.get(i);
-                int stop = 0;
                 if (datum.get("name").equals("Default Cards")) {
                     defaultCardsLocation = (String) datum.get("download_uri");
                     updateTime = (String) datum.get("updated_at");
                     DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyLLdd'_'kkmm");
                     ZonedDateTime zonedDateTime = ZonedDateTime.parse(updateTime);
-//                    LocalDateTime localDateTime = LocalDateTime.parse(updateTime);
                     updateTime = zonedDateTime.format(format);
                     break;
-
                 }
             }
         }
@@ -62,43 +62,43 @@ class ScryfallHelper {
 
         URL website = new URL(defaultCardsLocation);
         try (InputStream in = website.openStream()) {
-//            logger.info("Starting to download data from {}.",
-//                        defaultCardsLocation);
+            logger.info("Starting to download data from {}.",
+                        defaultCardsLocation);
             Files.copy(in,
                        Paths.get(file),
                        StandardCopyOption.REPLACE_EXISTING);
-//            logger.info("Data finished downloading.");
+            logger.info("Data finished downloading.");
         } catch (ExportException e) {
             return null;
         }
         return file;
     }
 
-//    public
-//    JSONArray openDownloadedJson(String file) throws ParseException, IOException {
-//        JSONParser parser = new JSONParser();
-//        Object obj = parser.parse(result);
-//        JSONParser jsonParser = new JSONParser();
-//        try (FileReader reader = new FileReader(file)) {
-//            //Read JSON file
-//            obj = jsonParser.parse(reader);
-//
-//            return (JSONArray) obj;
-//
-//        } catch (FileNotFoundException e) {
-////            logger.error("FileNotFoundException {}",
-////                         e);
-//            e.printStackTrace();
-//        } catch (IOException e) {
-////            logger.error("IOException {}",
-////                         e);
-//            e.printStackTrace();
-//        } catch (ParseException e) {
-////            logger.error("ParseException {}",
-////                         e);
-//            e.printStackTrace();
-//        }
-//
-//        return null;
-//    }
+    public
+    JSONArray openDownloadedJson(String filePath) throws ParseException, IOException {
+        Object obj = null;
+        JSONParser jsonParser = new JSONParser();
+        try (FileReader reader = new FileReader(filePath)) {
+            //Read JSON file
+            logger.info("Going to open file {}", filePath);
+            obj = jsonParser.parse(reader);
+            logger.info("File is open");
+            return (JSONArray) obj;
+
+        } catch (FileNotFoundException e) {
+            logger.error("FileNotFoundException {}",
+                         e);
+            e.printStackTrace();
+        } catch (IOException e) {
+            logger.error("IOException {}",
+                         e);
+            e.printStackTrace();
+        } catch (ParseException e) {
+            logger.error("ParseException {}",
+                         e);
+            e.printStackTrace();
+        }
+        logger.error("We were not able to open the file {}.", filePath);
+        return null;
+    }
 }
