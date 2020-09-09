@@ -19,6 +19,7 @@ import rez.mtg.price.repository.PriceRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 @Controller
 @RequestMapping(path = "/price")
@@ -92,6 +93,7 @@ class PriceController {
                         } else {
                             price = new Price();
                             price.setCard(card);
+                            price.setDate(new java.sql.Date(Calendar.getInstance().getTime().getTime()));
                         }
                     } else if (price != null && "usd".equals(fieldName)) {
                         double usd = jsonParser.getValueAsDouble();
