@@ -51,15 +51,15 @@ class PriceController {
 
     @GetMapping(path = "/version")
     public @ResponseBody
-    String updatePriceForTodayTest()
-    {
-        return "Version: 1";
+    String updatePriceForTodayTest() {
+        return "Version: 1.01";
     }
 
 
     @PostMapping(path = "/update")
     public @ResponseBody
     String updatePriceForTodayTest(@RequestParam(value = "file", required = false) String file) {
+        long start = System.currentTimeMillis();
         logger.info("test");
         int count = 0;
         int saved = 0;
@@ -149,9 +149,10 @@ class PriceController {
                             }
                             priceArrayList.add(price);
                             if (priceArrayList.size() >= 500) {
-                                logger.info("going to save {} price",
-                                            priceArrayList.size());
                                 saved += priceArrayList.size();
+                                logger.info("going to save a batch of {}.  This session has saved a total of {}.",
+                                            priceArrayList.size(),
+                                            saved);
                                 priceRepository.saveAll(priceArrayList);
                                 priceArrayList.clear();
                             }
@@ -172,9 +173,12 @@ class PriceController {
             priceRepository.saveAll(priceArrayList);
             priceArrayList.clear();
         }
-        logger.info("Done updating the prices.  We went through {} cards and saved {} cards.",
+        long end = System.currentTimeMillis();
+        double totalTime = (end - start) / 1000.0;
+        logger.info("Done updating the prices.  We went through {} cards and saved {} cards in {}sec.",
                     count,
-                    saved);
+                    saved,
+                    totalTime);
         return ("Done updating the prices.  We went through " + count + " cards and saved " + saved + " cards.");
     }
 
