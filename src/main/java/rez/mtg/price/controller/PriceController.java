@@ -167,7 +167,7 @@ class PriceController {
                          e);
         }
         if (priceArrayList.size() > 0) {
-            count += priceArrayList.size();
+            saved += priceArrayList.size();
             logger.info("going to save {} price",
                         priceArrayList.size());
             priceRepository.saveAll(priceArrayList);
