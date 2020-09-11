@@ -3,6 +3,7 @@ package rez.mtg.price.controller;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import rez.mtg.price.exception.ResourceNotFoundException;
 import rez.mtg.price.helper.JSONHelper;
 import rez.mtg.price.helper.ScryfallHelper;
 import rez.mtg.price.magic.Card;
@@ -27,6 +30,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Controller
 @RequestMapping(path = "/price")
@@ -49,18 +57,10 @@ class PriceController {
     @Value("${mtg.datapath}")
     private String downloadLocation;
 
-    @GetMapping(path = "/version")
-    public @ResponseBody
-    String updatePriceForTodayTest() {
-        return "Version: 1.01";
-    }
-
-
     @PostMapping(path = "/update")
     public @ResponseBody
     String updatePriceForTodayTest(@RequestParam(value = "file", required = false) String file) {
-        long start = System.currentTimeMillis();
-        logger.info("test");
+        StopWatch sw = new StopWatch();
         int count = 0;
         int saved = 0;
         SimpleDateFormat sdf1 = new SimpleDateFormat("MM-dd-yyyy");
@@ -102,6 +102,7 @@ class PriceController {
         }
         try {
 
+            sw.start();
             while (!jsonParser.isClosed()) {
                 count++;
                 JsonToken jsonToken = jsonParser.nextToken();
@@ -148,11 +149,12 @@ class PriceController {
                                 } else price.setEur(null);
                             }
                             priceArrayList.add(price);
-                            if (priceArrayList.size() >= 500) {
+                            if (priceArrayList.size() >= 1000) {
+                                sw.split();
                                 saved += priceArrayList.size();
-                                logger.info("going to save a batch of {}.  This session has saved a total of {}.",
-                                            priceArrayList.size(),
-                                            saved);
+                                logger.info("Saved a total of {} in {}.",
+                                            saved,
+                                            sw.toSplitString());
                                 priceRepository.saveAll(priceArrayList);
                                 priceArrayList.clear();
                             }
@@ -174,12 +176,77 @@ class PriceController {
             priceArrayList.clear();
         }
         long end = System.currentTimeMillis();
-        double totalTime = (end - start) / 1000.0;
-        logger.info("Done updating the prices.  We went through {} cards and saved {} cards in {}sec.",
+        sw.stop();
+        logger.info("Done updating the prices.  We went through {} cards and saved {} cards in {}.",
                     count,
                     saved,
-                    totalTime);
+                    sw.toString());
         return ("Done updating the prices.  We went through " + count + " cards and saved " + saved + " cards.");
+    }
+
+    @GetMapping(path = "/card/{cardId}/date/{date}")
+    public @ResponseBody
+    HashMap<String, Object> getCard(@PathVariable("cardId") String cardId, @PathVariable("date") String date) {
+        logger.info("finding price for cardId: {} on date {}", cardId, date);
+        Card card = cardRepository
+                .findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("could not find card with id: " + cardId));
+        Set<Price> prices = priceRepository.findAllByCardId(card.getId());
+        HashMap<String, Object> map = new HashMap<>();
+        Map<Date, List<Price>> priceMap = prices.stream().filter(p -> p.getDate().toString().equalsIgnoreCase(date)).collect(groupingBy(Price::getDate));
+        return getStringObjectHashMap(card,
+                                      map,
+                                      priceMap);
+    }
+
+    @GetMapping(path = "/card/{cardId}")
+    public @ResponseBody
+    HashMap<String, Object> getCard(@PathVariable("cardId") String cardId) {
+        logger.info("finding price for cardId: {}", cardId);
+        Card card = cardRepository
+                .findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("could not find card with id: " + cardId));
+        Set<Price> prices = priceRepository.findAllByCardId(card.getId());
+        HashMap<String, Object> map = new HashMap<>();
+        Map<Date, List<Price>> priceMap = prices.stream().collect(groupingBy(Price::getDate));
+        return getStringObjectHashMap(card,
+                                      map,
+                                      priceMap);
+    }
+
+    private
+    HashMap<String, Object> getStringObjectHashMap(Card card, HashMap<String, Object> map,
+                                                   Map<Date, List<Price>> priceMap) {
+        Map<String, Object> tempPriceMap = new HashMap<>();
+        for (Date key : priceMap.keySet()) {
+            Price price = priceMap.get(key).get(0);
+            HashMap<String, Object> temp = new HashMap<>();
+            if (price.getUsd() != null) {
+                temp.put("usd",
+                         price.getUsd());
+            }
+            if (price.getUsd_foil() != null) {
+                temp.put("usd_foil",
+                         price.getUsd_foil());
+            }
+            if (price.getTix() != null) {
+                temp.put("tix",
+                         price.getTix());
+            }
+            if (price.getEur() != null) {
+                temp.put("eur",
+                         price.getEur());
+            }
+            if (temp.size() > 0) {
+                tempPriceMap.put(key.toString(),
+                        temp);
+            }
+        }
+        map.put("card",
+                card);
+        map.put("price",
+                tempPriceMap);
+        return map;
     }
 
     private

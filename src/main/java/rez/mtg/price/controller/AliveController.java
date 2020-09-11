@@ -3,6 +3,7 @@ package rez.mtg.price.controller;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -40,5 +41,11 @@ public class AliveController {
     @ManagedAttribute(description = "The Alive Attribute")
     public static void setAlive(boolean alive) {
         _alive = alive;
+    }
+
+    @GetMapping(path = "/version")
+    public @ResponseBody
+    String updatePriceForTodayTest() {
+        return "Version: 1.01";
     }
 }
