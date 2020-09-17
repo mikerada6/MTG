@@ -19,8 +19,6 @@ public class AliveController {
     @Value("${mtg.version}")
     private String version;
 
-    @Value("${build.version}")
-    private String buildVersion;
 
     /**
      * Endpoint to check if the application is "alive". For use by load-balancer？
@@ -54,7 +52,6 @@ public class AliveController {
     public @ResponseBody
     String updatePriceForTodayTest() {
         String ans = "Version: " + version;
-        ans += "\nBuild version: " + buildVersion;
 
         return ans;
     }
