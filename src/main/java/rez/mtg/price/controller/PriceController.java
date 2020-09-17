@@ -25,6 +25,12 @@ import rez.mtg.price.repository.CardRepository;
 import rez.mtg.price.repository.PriceRepository;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.rmi.server.ExportException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -57,6 +63,47 @@ class PriceController {
     @Value("${mtg.datapath}")
     private String downloadLocation;
 
+    @GetMapping(path = "/brute")
+    public
+    void bruteForce(@RequestParam(value = "date", required = true) String date) throws ParseException, IOException {
+        String url = "https://c2.scryfall.com/file/scryfall-bulk/default-cards/default-cards-" + date;
+//        url = "https://archive.scryfall.com/bulk-data/default-cards/default-cards-";
+        for (int i = 90300; i < 90500; i++) {
+            String temp = url +
+                          String.format("%06d",
+                                        i) +
+                          ".json";
+            String file = downloadLocation +
+                          date +
+                          "_" +
+                          String.format("%06d",
+                                        i) +
+                          ".json";
+            URL website = new URL(temp);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                try (InputStream in = website.openStream()) {
+                    Files.copy(in,
+                               Paths.get(file),
+                               StandardCopyOption.REPLACE_EXISTING);
+                    logger.info("Data downloaded to {}.",
+                                file);
+                    return;
+                } catch (ExportException e) {
+                    logger.error("ExportException {}",
+                                 e);
+                }
+            } catch (Exception e) {
+                logger.error("Exception {}",
+                             file);
+            }
+        }
+    }
+
     @PostMapping(path = "/update")
     public @ResponseBody
     String updatePriceForTodayTest(@RequestParam(value = "file", required = false) String file) {
@@ -83,9 +130,10 @@ class PriceController {
                                                  2);
                 date = new java.sql.Date(sdf1.parse(month + "-" + day + "-" + year).getTime());
                 file = downloadLocation + file;
-                logger.info("input file using {}.",
-                            file);
             }
+            logger.info("input file using {} for date {}.",
+                        file,
+                        date);
             jsonParser = scryfallHelper.openDownloadedJson(file);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -187,13 +235,18 @@ class PriceController {
     @GetMapping(path = "/card/{cardId}/date/{date}")
     public @ResponseBody
     HashMap<String, Object> getCard(@PathVariable("cardId") String cardId, @PathVariable("date") String date) {
-        logger.info("finding price for cardId: {} on date {}", cardId, date);
+        logger.info("finding price for cardId: {} on date {}",
+                    cardId,
+                    date);
         Card card = cardRepository
                 .findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("could not find card with id: " + cardId));
         Set<Price> prices = priceRepository.findAllByCardId(card.getId());
         HashMap<String, Object> map = new HashMap<>();
-        Map<Date, List<Price>> priceMap = prices.stream().filter(p -> p.getDate().toString().equalsIgnoreCase(date)).collect(groupingBy(Price::getDate));
+        Map<Date, List<Price>> priceMap = prices
+                .stream()
+                .filter(p -> p.getDate().toString().equalsIgnoreCase(date))
+                .collect(groupingBy(Price::getDate));
         return getStringObjectHashMap(card,
                                       map,
                                       priceMap);
@@ -202,7 +255,8 @@ class PriceController {
     @GetMapping(path = "/card/{cardId}")
     public @ResponseBody
     HashMap<String, Object> getCard(@PathVariable("cardId") String cardId) {
-        logger.info("finding price for cardId: {}", cardId);
+        logger.info("finding price for cardId: {}",
+                    cardId);
         Card card = cardRepository
                 .findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("could not find card with id: " + cardId));
@@ -239,7 +293,7 @@ class PriceController {
             }
             if (temp.size() > 0) {
                 tempPriceMap.put(key.toString(),
-                        temp);
+                                 temp);
             }
         }
         map.put("card",

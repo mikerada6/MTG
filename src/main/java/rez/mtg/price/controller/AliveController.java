@@ -1,5 +1,6 @@
 package rez.mtg.price.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class AliveController {
 
     private static boolean _alive = true;
+
+    @Value("${mtg.version}")
+    private String version;
+
+    @Value("${build.version}")
+    private String buildVersion;
 
     /**
      * Endpoint to check if the application is "alive". For use by load-balancer？
@@ -46,6 +53,9 @@ public class AliveController {
     @GetMapping(path = "/version")
     public @ResponseBody
     String updatePriceForTodayTest() {
-        return "Version: 1.01";
+        String ans = "Version: " + version;
+        ans += "\nBuild version: " + buildVersion;
+
+        return ans;
     }
 }
