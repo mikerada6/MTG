@@ -1,5 +1,7 @@
 package rez.mtg.price.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -19,6 +21,8 @@ public class AliveController {
     @Value("${mtg.version}")
     private String version;
 
+    private static final Logger logger = LoggerFactory.getLogger(AliveController.class);
+
 
     /**
      * Endpoint to check if the application is "alive". For use by load-balancer？
@@ -28,6 +32,7 @@ public class AliveController {
     @RequestMapping(value = "/alive", method = RequestMethod.GET)
     public @ResponseBody
     Boolean alive() {
+        logger.info("alive");
         return _alive;
     }
 
@@ -51,6 +56,7 @@ public class AliveController {
     @GetMapping(path = "/version")
     public @ResponseBody
     String updatePriceForTodayTest() {
+        logger.info("version");
         String ans = "Version: " + version;
 
         return ans;
